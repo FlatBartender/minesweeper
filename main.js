@@ -48,7 +48,9 @@ app.use("/create-:width-:height-:mines", function (req, res) {
     if (isNaN(height)     || isNaN(width) || isNaN(mines) ||
         height <= 0       || width <= 0   || mines <= 0   ||
         height >  1000    || width >  1000) {
-        res.render("error_create", {reason: "One of your parameters is either
+        res.render("error_create", {reason: "At least one of your parameters is invalid."}, (err, html) => {
+            res.status(400).send(html)
+        })
     }
 
     if (mines > width * height) {
