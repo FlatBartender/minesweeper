@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Minesweeper game creation error</title>
+    </head>
+    <body>
+        Sorry, couldn't create your game: {{reason}}. You will be redirected to the lobby in 5 seconds.
+        <script>
+            setTimeout(() => {
+                window.location.replace("/lobby");
+            }, 5000);
+        </script>
+    </body>
+</html>

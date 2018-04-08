@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Minesweeper game not found</title>
+    </head>
+    <body>
+        Sorry, game {{id}} couldn't be found. You will be redirected to the lobby in 5 seconds.
+        <script>
+            setTimeout(() => {
+                window.location.replace("/lobby");
+            }, 5000);
+        </script>
+    </body>
+</html>

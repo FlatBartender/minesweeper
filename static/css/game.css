@@ -1,0 +1,15 @@
+td {
+    width: 20px;
+    height: 20px;
+    padding: 0px;
+    text-align: center;
+    vertical-align: center;
+    border: 1px solid black;
+    background-color: grey;
+    color: black;
+}
+
+img {
+    margin: 0px;
+    padding: 0px;
+}
