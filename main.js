@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
 
         socket.on('discover', (coords) => {
             coords = {x: parseInt(coords.x), y: parseInt(coords.y)}
-            clearTimeout(game.timeout)
+            if (!games[id]) return
             reset_timeout(id)
 
             // Classif BFS: 
@@ -188,6 +188,7 @@ io.on('connection', (socket) => {
         })
 
         socket.on('flag', ({x, y}) => {
+            if (!games[id]) return
             clearTimeout(game.timeout)
             reset_timeout(id)
             let cell = games[id].table[y][x]

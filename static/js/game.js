@@ -1,4 +1,6 @@
 let game = {};
+let game_status = "running";
+
 let status = document.getElementById('status');
 let field = document.getElementById("game");
 const socket = io();
@@ -26,7 +28,9 @@ socket.on('flagged', (flagged) => {
     }
 });
 socket.on('game over', () => {
+    game_status = "end";
     status.innerText = "You lost! You will be redirected to the lobby in 5 seconds.";
+
     setTimeout(() => {
         window.location.replace("/lobby");
     }, 5000);
@@ -52,6 +56,7 @@ socket.on('game params', (params) => {
     }
 });
 socket.on('win', () => {
+    game_status = "end";
     status.innerText = "You won! You will be redirected to the lobby in 5 seconds.";
     setTimeout(() => {
         window.location.replace("/lobby");
@@ -64,6 +69,7 @@ socket.on('disconnect', (reason) => {
 socket.emit('join', game_id);
 
 function handle_left_click(event) {
+    if (game_status == "end") return;
     let x = parseInt(this.getAttribute("data-x"));
     let y = parseInt(this.getAttribute("data-y"));
     if (game.table[y][x].discovered) return;
@@ -75,6 +81,7 @@ function handle_left_click(event) {
     event.preventDefault();
 }
 function handle_right_click(event) {
+    if (game_status == "end") return;
     let x = parseInt(this.getAttribute("data-x"));
     let y = parseInt(this.getAttribute("data-y"));
     if (game.table[y][x].discovered) return;
