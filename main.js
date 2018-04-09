@@ -5,6 +5,7 @@ const path      = require("path")
 const fs        = require("fs")
 const socketio  = require("socket.io")
 const http      = require("http")
+const logger = require("morgan")
 
 const app    = express()
 const server = http.Server(app)
@@ -22,6 +23,7 @@ const GAME_TIMEOUT = SETTINGS.timeout || 60*1000*5
 app.engine("mustache", mustache())
 app.set("view engine", "mustache")
 app.set("views", path.join(__dirname, "views"))
+app.use(logger("dev"))
 
 app.use(express.static(path.join(__dirname, "static")))
 
