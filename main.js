@@ -8,6 +8,7 @@ const http      = require("http")
 const logger = require("morgan")
 
 const app    = express()
+const router = express.Router()
 const server = http.Server(app)
 const io     = socketio(server)
 
@@ -25,11 +26,14 @@ app.set("view engine", "mustache")
 app.set("views", path.join(__dirname, "views"))
 app.use(logger("dev"))
 
-app.use(express.static(path.join(__dirname, "static")))
 
 let games = {}
 
-app.use("/game/:id", function (req, res) {
+app.use(SETTINGS.url_path || "/", router)
+
+router.use(express.static(path.join(__dirname, "static")))
+
+router.use("/game/:id", function (req, res) {
     let id = req.params.id
     if (!games[id]) {
         res.render("game_404", {id}, (err, html) => {
@@ -43,13 +47,13 @@ app.use("/game/:id", function (req, res) {
     })
 })
 
-app.use("/lobby", function (req, res) {
+router.use("/lobby", function (req, res) {
     res.render("lobby", games, (err, html) => {
         res.send(html)
     })
 })
 
-app.use("/create-:width-:height-:mines", function (req, res) {
+router.use("/create-:width-:height-:mines", function (req, res) {
     let width  = parseInt(req.params.width)
     let height = parseInt(req.params.height)
     let mines  = parseInt(req.params.mines)
@@ -104,7 +108,7 @@ app.use("/create-:width-:height-:mines", function (req, res) {
 
 
 // ADD ROUTES BEFORE THIS
-app.get("*", (req, res) => {
+router.get("*", (req, res) => {
     res.redirect("/lobby")
 })
 io.on('connection', (socket) => {
