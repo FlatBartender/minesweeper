@@ -93,6 +93,11 @@ app.use("/create-:width-:height-:mines", function (req, res) {
     res.redirect(`/game/${id}`)
 })
 
+
+// ADD ROUTES BEFORE THIS
+app.get("*", (req, res) => {
+    res.redirect("/lobby")
+})
 io.on('connection', (socket) => {
     socket.on('join', (id) => {
         if (!games[id]) {
