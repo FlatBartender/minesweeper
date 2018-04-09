@@ -5,11 +5,23 @@ td {
     text-align: center;
     vertical-align: center;
     border: 1px solid black;
-    background-color: grey;
+    background-color: silver;
     color: black;
 }
 
 img {
     margin: 0px;
     padding: 0px;
+}
+
+.discovered {
+    background-color: gainsboro;
+}
+
+.mine {
+    background-color: red;
+}
+
+.flagged {
+    background-color: steelblue;
 }

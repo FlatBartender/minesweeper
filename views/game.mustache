@@ -22,16 +22,11 @@ socket.on('discovered', (discovered) => {
         let field_cell = game.table[y][x];
         let field_elem = document.querySelector(`td[data-x="${x}"][data-y="${y}"]`);
         if (cell.mine) {
-            let celem = field_elem.cloneNode(false);
-            let img = document.createElement("img");
-            img.src = "/img/mine.png";
-            celem.appendChild(img);
-            celem.addEventListener('click', handle_left_click);
-            celem.addEventListener('contextmenu', handle_right_click);
-            field_elem.parentNode.replaceChild(celem, field_elem);
+            field_elem.classList.add("mine");
             return;
         }
-        field_elem.innerText = cell.neighbors;
+        field_elem.innerText = cell.neighbors > 0 ? cell.neighbors:"";
+        field_elem.classList.add("discovered");
         game.table[y][x] = cell;
     }
 });
@@ -41,15 +36,7 @@ socket.on('flagged', (flagged) => {
         console.log(`!!! CELL FLAGGED at ${x}, ${y}: ${cell}`);
         let field_cell = game.table[y][x];
         let field_elem = document.querySelector(`td[data-x="${x}"][data-y="${y}"]`);
-        let celem = field_elem.cloneNode(false);
-        if (cell.flagged) {
-            let img = document.createElement("img");
-            img.src = "/img/flag.png";
-            celem.appendChild(img);
-            celem.addEventListener('click', handle_left_click);
-            celem.addEventListener('contextmenu', handle_right_click);
-        }
-        field_elem.parentNode.replaceChild(celem, field_elem);
+        field_elem.classList.toggle("flagged");
         game.table[y][x] = cell;
     }
 });
