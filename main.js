@@ -114,7 +114,6 @@ io.on('connection', (socket) => {
             return
         }
         
-        console.log("JOINED ", id)
         let game = games[id]
 
         socket.join(id)
@@ -222,7 +221,6 @@ function clean_cell(cell) {
 }
 
 function game_over(id) {
-    console.log("GAME_OVER ", id)
     let game = games[id]
     if (game.timeout) clearTimeout(game.timeout)
 
@@ -230,7 +228,6 @@ function game_over(id) {
 }
 
 function reset_timeout(id) {
-    console.log("RESET_TIMEOUT ", id)
     let game = games[id]
     if (game.timeout) clearTimeout(game.timeout)
     game.timeout = setTimeout(() => delete_game(id), GAME_TIMEOUT)
@@ -245,7 +242,6 @@ function min(a, b) {
 }
 
 function win_condition(id) {
-    console.log("WIN_CONDITION ", id)
     let game = games[id]
     return !game.table.some((row) => {
         return row.some((cell) => {
