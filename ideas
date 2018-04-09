@@ -1,2 +1,4 @@
 items:
     - reveal a random safe case
+    - "defuse kits" -> removes a cell, whether it's mined or not
+    - teleporters/wormholes
