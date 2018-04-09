@@ -10,7 +10,14 @@ const app    = express()
 const server = http.Server(app)
 const io     = socketio(server)
 
-const GAME_TIMEOUT = 60*1000*5
+let SETTINGS
+try {
+    SETTINGS = JSON.parse(fs.readFileSync("settings.json"))
+} catch (err) {
+    SETTINGS = {}
+    console.log(err)
+}
+const GAME_TIMEOUT = SETTINGS.timeout || 60*1000*5
 
 app.engine("mustache", mustache())
 app.set("view engine", "mustache")
@@ -252,4 +259,4 @@ function log_game(id) {
     }
 }
 
-server.listen(3000)
+server.listen(SETTINGS.listen_port || 3000)
