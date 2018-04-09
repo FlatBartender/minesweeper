@@ -88,7 +88,7 @@ app.use("/create-:width-:height-:mines", function (req, res) {
 
     game.table = table
     log_game(id)
-    reset_timeout(game)
+    reset_timeout(id)
 
     res.redirect(`/game/${id}`)
 })
@@ -124,8 +124,9 @@ io.on('connection', (socket) => {
         socket.emit('flagged', flagged)
 
         socket.on('discover', (coords) => {
+            coords = {x: parseInt(coords.x), y: parseInt(coords.y)}
             clearTimeout(game.timeout)
-            reset_timeout(game)
+            reset_timeout(id)
 
             // Classif BFS: 
             // push discovered cell
@@ -164,14 +165,24 @@ io.on('connection', (socket) => {
             }
 
             io.to(id).emit('discovered', discovered)
+
+            if (win_condition(id)) {
+                io.to(id).emit('win')
+                game_over(id)
+            }
         })
 
         socket.on('flag', ({x, y}) => {
             clearTimeout(game.timeout)
-            reset_timeout(game)
+            reset_timeout(id)
             let cell = games[id].table[y][x]
             cell.flagged = cell.flagged ? false : true
             io.to(id).emit('flagged', [{x, y, cell: clean_cell(cell)}])
+
+            if (win_condition(id)) {
+                io.to(id).emit('win')
+                game_over(id)
+            }
         })
     })
 })
@@ -201,7 +212,8 @@ function game_over(id) {
     delete_game(id)
 }
 
-function reset_timeout(game) {
+function reset_timeout(id) {
+    let game = games[id]
     if (game.timeout) clearTimeout(game.timeout)
     game.timeout = setTimeout(() => delete_game(id), GAME_TIMEOUT)
 }
@@ -212,6 +224,15 @@ function delete_game(id) {
 
 function min(a, b) {
     return a < b ? a: b
+}
+
+function win_condition(id) {
+    let game = games[id]
+    return !game.table.some((row) => {
+        return row.some((cell) => {
+            return (!cell.flagged && cell.mine) || (cell.flagged && !cell.mine)
+        })
+    })
 }
 
 function max(a, b) {
