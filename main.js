@@ -221,6 +221,7 @@ function clean_cell(cell) {
 
 function game_over(id) {
     let game = games[id]
+    if (!game) return
     if (game.timeout) clearTimeout(game.timeout)
 
     delete_game(id)
@@ -228,6 +229,7 @@ function game_over(id) {
 
 function reset_timeout(id) {
     let game = games[id]
+    if (!game) return
     if (game.timeout) clearTimeout(game.timeout)
     game.timeout = setTimeout(() => delete_game(id), GAME_TIMEOUT)
 }
