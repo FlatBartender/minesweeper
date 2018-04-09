@@ -41,13 +41,13 @@ app.use("/game/:id", function (req, res) {
     })
 })
 
-app.use("lobby", function (req, res) {
+app.use("/lobby", function (req, res) {
     res.render("lobby", games, (err, html) => {
         res.send(html)
     })
 })
 
-app.use("create-:width-:height-:mines", function (req, res) {
+app.use("/create-:width-:height-:mines", function (req, res) {
     let width  = parseInt(req.params.width)
     let height = parseInt(req.params.height)
     let mines  = parseInt(req.params.mines)
@@ -97,13 +97,13 @@ app.use("create-:width-:height-:mines", function (req, res) {
     log_game(id)
     reset_timeout(id)
 
-    res.redirect(`game/${id}`)
+    res.redirect(`/game/${id}`)
 })
 
 
 // ADD ROUTES BEFORE THIS
 app.get("*", (req, res) => {
-    res.redirect("lobby")
+    res.redirect("/lobby")
 })
 io.on('connection', (socket) => {
     socket.on('join', (id) => {
