@@ -3,6 +3,9 @@ let game_status = "running";
 
 let status = document.getElementById('status');
 let field = document.getElementById("game");
+
+let messages = document.getElementById('messages');
+
 const socket = io();
 socket.on('discovered', (discovered) => {
     for (let d of discovered) {
@@ -65,8 +68,34 @@ socket.on('win', () => {
 socket.on('disconnect', (reason) => {
     status.innerText = "You've been disconnected from the server! Please refresh the page.";
 });
+socket.on('chat message', (message) => {
+    let {user, content} = message;
+    let ctn_elem = document.createElement("span");
+    let usr_elem = document.createElement("span");
+    let msg_elem = document.createElement("div");
+    msg_elem.classList.add("message");
+    ctn_elem.innerText = content;
+    usr_elem.innerText = user;
+    ctn_elem.classList.add("content");
+    usr_elem.classList.add("user");
+    msg_elem.appendChild(usr_elem);
+    msg_elem.appendChild(ctn_elem);
+    messages.appendChild(msg_elem);
+});
 
 socket.emit('join', game_id);
+
+let message_username = document.getElementById("username");
+let message_text = document.getElementById("message_text");
+
+document.getElementById("send_message").addEventListener("click", send_message);
+
+function send_message(event) {
+    let content = message_text.value;
+    message_text.value = "";
+    let user = message_username.value;
+    socket.emit('chat message', {user, content, game_id});
+}
 
 function handle_left_click(event) {
     if (game_status == "end") return;

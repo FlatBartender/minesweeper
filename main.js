@@ -199,6 +199,11 @@ io.on('connection', (socket) => {
                 game_over(id)
             }
         })
+
+        socket.on('chat message', ({user, content, game_id}) => {
+            if (!(games[game_id] && content != "" && user != "")) return
+            io.to(game_id).emit('chat message', {user, content})
+        })
     })
 })
 

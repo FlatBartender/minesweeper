@@ -25,3 +25,51 @@ img {
 .flagged {
     background-color: steelblue;
 }
+
+#messages {
+    width: 400px;
+    position: fixed;
+    right: 0px;
+    top: 0px;
+    height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+}
+
+#message_control > * {
+    width: 100%;
+}
+
+#messages > div {
+    width: 100%;
+    overflow: hidden;
+}
+
+.message {
+    display: flex;
+    flex-direction: row;
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+}
+
+.message > .user {
+    text-align: right;
+    margin-right: 10px;
+    flex-basis: 25%;
+    flex-grow: 0;
+    flex-shrink: 0;
+    font-weight: bold;
+    overflow: hidden;
+}
+
+.message > .content {
+    text-align: left;
+    flex-grow: 3;
+    flex-shrink: 0;
+}
+
+#messages * {
+    margin: none;
+    padding: none;
+}
