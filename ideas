@@ -1,4 +1,9 @@
 items:
     - reveal a random safe case
     - "defuse kits" -> removes a cell, whether it's mined or not
+
+additional gameplay:
     - teleporters/wormholes
+
+QOL:
+    - generate after first click, with a "free" area around the explored point
