@@ -16,6 +16,7 @@ img {
 
 .discovered {
     background-color: gainsboro;
+    font-family: 'Inconsolata', monospace;
 }
 
 .mine {
