@@ -19,6 +19,8 @@ try {
     console.log(err)
 }
 const GAME_TIMEOUT = SETTINGS.timeout || 60*1000*5
+const INITIAL_AREA = SETTINGS.initial_area || 2
+
 
 app.engine("mustache", mustache())
 app.set("view engine", "mustache")
@@ -64,7 +66,7 @@ app.use("/create-:width-:height-:mines", function (req, res) {
     }
 
     if (mines+9 >= width * height) {
-        res.render("error_create", {reason: "Can't have more mines than cells-9"}, (err, html) => {
+        res.render("error_create", {reason: `Can't have more mines than cells - ${Math.pow(INITIAL_AREA+1, 2)+1}`}, (err, html) => {
             res.status(400).send(html)
         })
         return
@@ -251,21 +253,21 @@ function log_game(id) {
 function generate_table(id, coords) {
     let game = games[id]
     let {width, height, mines} = game
+    let mine_positions = []
     let table = new Array(height)
     for (let j = 0; j < height; j++) {
         table[j] = new Array(width)
         for (let i = 0; i < width; i++) {
             table[j][i] = {neighbors: 0, discovered: false}
+            if (Math.abs(i - coords.x) >= INITIAL_AREA ||
+                Math.abs(j - coords.y) >= INITIAL_AREA) {
+                mine_positions.push({x: i, y: j})
+            }
         }
     }
 
     for (let m = 0; m < mines; m++) {
-        let x, y
-        do {
-            y = Math.floor(Math.random() * height)
-            x = Math.floor(Math.random() * width)
-        } while (table[y][x].mine || (Math.abs(x - coords.x) < 2 && Math.abs(y - coords.y) < 2))
-        
+        let {x, y} = mine_positions.splice(Math.floor(Math.random() * mine_positions.length), 1)[0]
         table[y][x].mine = true;
         for (let j = max(0, y-1); j < min(height, y+2); j++) {
             for (let i = max(0, x-1); i < min(width, x+2); i++) {
