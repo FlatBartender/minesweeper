@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
             let {x, y} = coords = {x: parseInt(coords.x), y: parseInt(coords.y)}
             let game = games[id]
             if (!game) return
-            if (!game.table) generate_table(id, {x, y})
+            if (!game.table) generate_table(id, coords)
             if (game.table[y][x].flagged) return
             reset_timeout(id)
 
@@ -249,7 +249,6 @@ function log_game(id) {
 }
 
 function generate_table(id, coords) {
-    console.log(coords)
     let game = games[id]
     let {width, height, mines} = game
     let table = new Array(height)
