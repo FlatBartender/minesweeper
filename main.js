@@ -71,7 +71,7 @@ app.use("/create-:width-:height-:mines", function (req, res) {
     }
     
     let id
-    while (games[id = crypto.randomBytes(16).toString("hex")]);
+    while (games[id = crypto.randomBytes(4).toString("hex")]);
     games[id] = {width, height, mines}
     let game = games[id]
     reset_timeout(id)
