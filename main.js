@@ -56,14 +56,15 @@ app.use("/create-:width-:height-:mines", function (req, res) {
 
     if (isNaN(height)     || isNaN(width) || isNaN(mines) ||
         height <= 0       || width <= 0   || mines <= 0   ||
-        height >  1000    || width >  1000) {
+        height >  500     || width >  500) {
         res.render("error_create", {reason: "At least one of your parameters is invalid."}, (err, html) => {
             res.status(400).send(html)
         })
+        return
     }
 
-    if (mines > width * height) {
-        res.render("error_create", {reason: "Can't have more mines than cells"}, (err, html) => {
+    if (mines+9 >= width * height) {
+        res.render("error_create", {reason: "Can't have more mines than cells-9"}, (err, html) => {
             res.status(400).send(html)
         })
         return
@@ -73,30 +74,6 @@ app.use("/create-:width-:height-:mines", function (req, res) {
     while (games[id = crypto.randomBytes(16).toString("hex")]);
     games[id] = {width, height, mines}
     let game = games[id]
-    let table = []
-    for (let j = 0; j < height; j++) {
-        table[j] = []
-        for (let i = 0; i < width; i++) {
-            table[j][i] = {neighbors: 0, discovered: false}
-        }
-    }
-
-    for (let m = 0; m < mines; m++) {
-        let x, y
-        while (table[y = Math.floor(Math.random() * height)]
-                    [x = Math.floor(Math.random() * width)].mine);
-        
-        table[y][x].mine = true;
-        for (let j = max(0, y-1); j < min(height, y+2); j++) {
-            for (let i = max(0, x-1); i < min(width, x+2); i++) {
-                table[j][i].neighbors++
-            }
-        }
-    }
-    
-
-    game.table = table
-    log_game(id)
     reset_timeout(id)
 
     res.redirect(`/game/${id}`)
@@ -122,25 +99,28 @@ io.on('connection', (socket) => {
         
         let flagged = []
         let discovered = []
-        for (let y = 0; y < game.height; y++) {
-            for (let x = 0; x < game.width; x++) {
-                let cell = game.table[y][x]
-                if (cell.discovered) {
-                    discovered.push({x, y, cell})
-                }
-                if (cell.flagged) {
-                    flagged.push({x, y, cell: clean_cell(cell)})
+        if (game.table) {
+            for (let y = 0; y < game.height; y++) {
+                for (let x = 0; x < game.width; x++) {
+                    let cell = game.table[y][x]
+                    if (cell.discovered) {
+                        discovered.push({x, y, cell})
+                    }
+                    if (cell.flagged) {
+                        flagged.push({x, y, cell: clean_cell(cell)})
+                    }
                 }
             }
+
+            socket.emit('discovered', discovered)
+            socket.emit('flagged', flagged)
         }
-
-        socket.emit('discovered', discovered)
-        socket.emit('flagged', flagged)
-
         socket.on('discover', (coords) => {
             let {x, y} = coords = {x: parseInt(coords.x), y: parseInt(coords.y)}
-            if (!games[id]) return
-            if (games[id].table[y][x].flagged) return
+            let game = games[id]
+            if (!game) return
+            if (!game.table) generate_table(id, {x, y})
+            if (game.table[y][x].flagged) return
             reset_timeout(id)
 
             // Classif BFS: 
@@ -266,6 +246,37 @@ function log_game(id) {
     for (let line of game.table) {
         console.log(line.map((cell) => cell.mine ? "X" : cell.neighbors).reduce((str, elem) => str + elem, ""))
     }
+}
+
+function generate_table(id, coords) {
+    console.log(coords)
+    let game = games[id]
+    let {width, height, mines} = game
+    let table = new Array(height)
+    for (let j = 0; j < height; j++) {
+        table[j] = new Array(width)
+        for (let i = 0; i < width; i++) {
+            table[j][i] = {neighbors: 0, discovered: false}
+        }
+    }
+
+    for (let m = 0; m < mines; m++) {
+        let x, y
+        do {
+            y = Math.floor(Math.random() * height)
+            x = Math.floor(Math.random() * width)
+        } while (table[y][x].mine || (Math.abs(x - coords.x) < 2 && Math.abs(y - coords.y) < 2))
+        
+        table[y][x].mine = true;
+        for (let j = max(0, y-1); j < min(height, y+2); j++) {
+            for (let i = max(0, x-1); i < min(width, x+2); i++) {
+                table[j][i].neighbors++
+            }
+        }
+    }
+    
+    game.table = table
+    log_game(id)
 }
 
 server.listen(SETTINGS.listen_port || 3000)
