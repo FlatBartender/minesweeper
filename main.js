@@ -1,11 +1,13 @@
-const crypto    = require("crypto")
-const mustache  = require("mustache-express")
-const express   = require("express")
-const path      = require("path")
-const fs        = require("fs")
-const socketio  = require("socket.io")
-const http      = require("http")
-const logger = require("morgan")
+const crypto     = require("crypto")
+const mustache   = require("mustache-express")
+const express    = require("express")
+const path       = require("path")
+const fs         = require("fs")
+const socketio   = require("socket.io")
+const http       = require("http")
+const logger     = require("morgan")
+const session    = require("express-session")
+const bodyParser = require("body-parser")
 
 const app    = express()
 const server = http.Server(app)
@@ -18,14 +20,31 @@ try {
     SETTINGS = {}
     console.log(err)
 }
-const GAME_TIMEOUT = SETTINGS.timeout || 60*1000*5
-const INITIAL_AREA = SETTINGS.initial_area || 2
+const GAME_TIMEOUT   = SETTINGS.timeout || 60*1000*5
+const INITIAL_AREA   = SETTINGS.initial_area || 2
+const SESSION_SECRET = SETTINGS.session_secret || "you should really get a better secret."
 
+let session_middleware = session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {secure: true}
+})
 
 app.engine("mustache", mustache())
 app.set("view engine", "mustache")
 app.set("views", path.join(__dirname, "views"))
+app.set("trust proxy", 1)
+app.use(bodyParser.json())
+app.use(session_middleware)
 app.use(logger("dev"))
+
+app.use(function (req, res, next) => {
+    if (!req.session.nickname) {
+        req.session.nickname = `guest${crypto.randomBytes(4).toString("hex")}`
+    }
+    next()
+})
 
 app.use(express.static(path.join(__dirname, "static")))
 
@@ -45,10 +64,27 @@ app.use("/game/:id", function (req, res) {
     })
 })
 
-app.use("/lobby", function (req, res) {
-    res.render("lobby", games, (err, html) => {
+app.use("/home", function (req, res) {
+    res.render("home", games, (err, html) => {
         res.send(html)
     })
+})
+
+app.use("/lobby/:id", function (req, res) {
+    let id = req.params.id
+    if (!games[id]) {
+        res.render("game_404", {id}, (err, html) => {
+            res.status(404).send(html)
+        })
+        return
+    }
+    res.render("lobby", {id}, (err, html) => {
+        res.send(html)
+    })
+})
+
+app.use("/user-save", (req, res) => {
+    if (req.body.nickname) req.session.nickname = req.body.nickname
 })
 
 app.use("/create-:width-:height-:mines", function (req, res) {
@@ -86,6 +122,11 @@ app.use("/create-:width-:height-:mines", function (req, res) {
 app.get("*", (req, res) => {
     res.redirect("/lobby")
 })
+
+io.use((socket, next) => {
+    session_middleware(socket.request, socket.request.res, next)    
+})
+
 io.on('connection', (socket) => {
     socket.on('join', (id) => {
         if (!games[id]) {
@@ -94,29 +135,15 @@ io.on('connection', (socket) => {
         }
         
         let game = games[id]
+        if (game.status != Game.STATUS.lobby) {
+            socket.send({error: 401, description: "Can't join this game: it already started"}♦)
+            return
+        }
 
         socket.join(id)
+        game.join(socket.session.id)
+        socket.emit(game.summary())
 
-        socket.emit('game params', {width: game.width, height: game.height})
-        
-        let flagged = []
-        let discovered = []
-        if (game.table) {
-            for (let y = 0; y < game.height; y++) {
-                for (let x = 0; x < game.width; x++) {
-                    let cell = game.table[y][x]
-                    if (cell.discovered) {
-                        discovered.push({x, y, cell})
-                    }
-                    if (cell.flagged) {
-                        flagged.push({x, y, cell: clean_cell(cell)})
-                    }
-                }
-            }
-
-            socket.emit('discovered', discovered)
-            socket.emit('flagged', flagged)
-        }
         socket.on('discover', (coords) => {
             let {x, y} = coords = {x: parseInt(coords.x), y: parseInt(coords.y)}
             let game = games[id]
@@ -190,24 +217,6 @@ io.on('connection', (socket) => {
     })
 })
 
-
-const CLEAN_PROPERTIES = [
-    "discovered",
-    "flagged"
-]
-
-function clean_cell(cell) {
-    if (cell.discovered) return cell
-    let clean = Object.keys(cell)
-                      .filter(key => CLEAN_PROPERTIES.includes(key))
-                      .reduce((obj, key) => {
-                          obj[key] = cell[key]
-                          return obj
-                      }, {})
-
-    return clean
-}
-
 function game_over(id) {
     let game = games[id]
     if (game.timeout) clearTimeout(game.timeout)
@@ -229,6 +238,10 @@ function min(a, b) {
     return a < b ? a: b
 }
 
+function max(a, b) {
+    return a > b ? a: b
+}
+
 function win_condition(id) {
     let game = games[id]
     return !game.table.some((row) => {
@@ -238,9 +251,6 @@ function win_condition(id) {
     })
 }
 
-function max(a, b) {
-    return a > b ? a: b
-}
 
 function log_game(id) {
     let game = games[id]
@@ -267,7 +277,6 @@ function generate_table(id, coords) {
     }
 
     for (let m = 0; m < mines; m++) {
-        let {x, y} = mine_positions.splice(Math.floor(Math.random() * mine_positions.length), 1)[0]
         table[y][x].mine = true;
         for (let j = max(0, y-1); j < min(height, y+2); j++) {
             for (let i = max(0, x-1); i < min(width, x+2); i++) {

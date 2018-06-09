@@ -2,22 +2,53 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Minesweeper lobby</title>
+        <title>Minesweeper game {{id}} ~ Lobby</title>
+        <link rel="stylesheet" href="/css/team_lobby.css">
+        <link rel="stylesheet" href="/css/game.css">
+        <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet"> 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
     </head>
     <body>
-        <div id="board_settings">
-            <div>
-                <label for="width">Width: </label>
-                <input id="width" name="width" type="number" value="10" min="1" max="1000">
+        <div id="teams">
+            <div id="red_team">
+                <div>Red team</div>
+                <ul>
 
-                <label for="height">Height: </label>
-                <input id="height" name="height" type="number" value="10" min="1" max="1000">
+                </ul>
+                <button class="set_team">Select this team</button>
+            </div>
+            <div id="no_team">
+                <div>No team</div>
+                <ul>
 
-                <label for="mines">Mines: </label>
-                <input id="mines" name="mines" type="number" value="10" min="1">
+                </ul>
+                <button class="set_team">Select this team</button>
+            </div>
+            <div id="blue_team">
+                <div>Blue team</div>
+                <ul>
+
+                </ul>
+                <button class="set_team">Select this team</button>
             </div>
         </div>
-        <button id="new_game">Create game</button>
-        <script src="/js/lobby.js"></script>
+        <div id="status"></div>
+        <div id="messages">
+            <div id="message_control">
+                <textarea id="message_text" placeholder="Please enter your message."></textarea>
+                <div>
+                    <span>Destination</span>
+                    <select id="destination">
+                        <option value="current">Current team</option>
+                        <option value="all" selected>All</option>
+                    </select>
+                </div>
+                <button id="send_message">Send message</button>
+            </div>
+        </div>
+        <script>
+            let game_id = "{{id}}";
+        </script>
+        <script src="/js/team_lobby.js"></script>
     </body>
 </html>
